@@ -1,0 +1,14 @@
+[project]
+name = "dashboard-saude-ocara-ce"
+version = "0.1.0"
+description = "Dashboard interativo de indicadores de saúde pública do município de Ocara/CE, com dados do DATASUS."
+requires-python = ">=3.12, <3.14"
+dependencies = [
+    "streamlit",
+    "pandas",
+    "plotly",
+    "pysus",
+]
+
+[project.scripts]
+extrator = "src.extrator_datasus:main"

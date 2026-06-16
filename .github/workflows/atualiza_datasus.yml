@@ -1,0 +1,29 @@
+name: Atualizar Dados do DATASUS mensalmente
+
+on:
+  schedule:
+    - cron: '0 3 15 * *'
+  workflow_dispatch:
+
+jobs:
+  extrair_dados:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fazer checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Instalar dependências
+        run: uv sync
+
+      - name: Executar script de extração
+        run: uv run python src/extrator_datasus.py
+
+      - name: Fazer commit e push dos novos dados
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          git add dados/internacoes_ocara.csv
+          git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Update automático de dados do DATASUS" && git push)
