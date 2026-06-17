@@ -35,12 +35,27 @@ def carregar_dados():
     return df
 
 
-df = carregar_dados()
+df_completo = carregar_dados()
 
-if df.empty:
+if df_completo.empty:
     st.warning("Nenhum dado encontrado. Execute o script de extracao primeiro.")
     st.code("uv run python src/extrator_datasus.py")
     st.stop()
+
+periodos_disponiveis = sorted(df_completo['PERIODO'].unique())
+
+with st.sidebar:
+    st.header("Filtros")
+    periodos_selecionados = st.multiselect(
+        "Periodo",
+        options=periodos_disponiveis,
+        default=periodos_disponiveis,
+    )
+
+if periodos_selecionados:
+    df = df_completo[df_completo['PERIODO'].isin(periodos_selecionados)]
+else:
+    df = df_completo
 
 st.title("Painel de Internacoes Hospitalares - Ocara/CE")
 st.caption("Fonte: DATASUS/SIH - AIH Reduzida")
@@ -48,7 +63,7 @@ st.divider()
 
 total = len(df)
 obitos = int(df['MORTE'].sum())
-dias_medio = round(df['DIAS_PERM'].mean(), 1)
+dias_medio = round(df['DIAS_PERM'].mean(), 1) if not df.empty else 0
 valor_total = df['VAL_TOT'].sum()
 
 col1, col2, col3, col4 = st.columns(4)
