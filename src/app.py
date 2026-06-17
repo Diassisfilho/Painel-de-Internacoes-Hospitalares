@@ -5,9 +5,20 @@ import os
 
 st.set_page_config(page_title="Painel de Saude - Ocara/CE", page_icon="🏥", layout="wide")
 
-CAMINHO_DADOS = os.path.join(os.path.dirname(__file__), '..', 'dados', 'internacoes_ocara.csv')
+DIR_BASE = os.path.join(os.path.dirname(__file__), '..')
+CAMINHO_DADOS = os.path.join(DIR_BASE, 'dados', 'internacoes_ocara.csv')
+CAMINHO_CID = os.path.join(DIR_BASE, 'dados', 'cid10_subcategorias.csv')
 
 MAPA_SEXO = {1: 'Masculino', 3: 'Feminino'}
+
+
+@st.cache_data
+def carregar_cid10():
+    if not os.path.exists(CAMINHO_CID):
+        return {}
+    cid = pd.read_csv(CAMINHO_CID, sep=';', encoding='latin-1', usecols=['SUBCAT', 'DESCRICAO'])
+    return dict(zip(cid['SUBCAT'], cid['DESCRICAO']))
+
 
 @st.cache_data
 def carregar_dados():
@@ -17,6 +28,10 @@ def carregar_dados():
     df = pd.read_csv(CAMINHO_DADOS)
     df['SEXO_LABEL'] = df['SEXO'].map(MAPA_SEXO).fillna('Outro')
     df['PERIODO'] = df['ANO_CMPT'].astype(str) + '-' + df['MES_CMPT'].astype(str).str.zfill(2)
+
+    mapa_cid = carregar_cid10()
+    df['DIAGNOSTICO'] = df['DIAG_PRINC'].map(mapa_cid).fillna(df['DIAG_PRINC'])
+
     return df
 
 
@@ -48,18 +63,20 @@ col_esq, col_dir = st.columns(2)
 
 with col_esq:
     contagem_diag = (
-        df['DIAG_PRINC']
+        df['DIAGNOSTICO']
         .value_counts()
         .head(10)
         .reset_index()
     )
-    contagem_diag.columns = ['CID-10', 'Quantidade']
+    contagem_diag.columns = ['Diagnostico', 'Quantidade']
 
     fig_diag = px.bar(
-        contagem_diag, x='CID-10', y='Quantidade',
-        title='Diagnosticos Mais Frequentes (CID-10)',
+        contagem_diag, x='Quantidade', y='Diagnostico',
+        title='Diagnosticos Mais Frequentes',
         color_discrete_sequence=['#ff7f0e'],
+        orientation='h',
     )
+    fig_diag.update_layout(yaxis={'categoryorder': 'total ascending'})
     st.plotly_chart(fig_diag, use_container_width=True)
 
 with col_dir:
@@ -102,5 +119,5 @@ if df['PERIODO'].nunique() > 1:
     st.plotly_chart(fig_serie, use_container_width=True)
 
 with st.expander("Ver dados tabulares"):
-    colunas_exibir = ['ANO_CMPT', 'MES_CMPT', 'DIAG_PRINC', 'SEXO_LABEL', 'IDADE', 'DIAS_PERM', 'VAL_TOT', 'MORTE']
+    colunas_exibir = ['ANO_CMPT', 'MES_CMPT', 'DIAGNOSTICO', 'SEXO_LABEL', 'IDADE', 'DIAS_PERM', 'VAL_TOT', 'MORTE']
     st.dataframe(df[colunas_exibir], use_container_width=True)
