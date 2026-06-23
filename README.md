@@ -106,7 +106,8 @@ O painel estará acessível no endereço padrão `http://localhost:8501`.
 
 ---
 
-## 📈 Fontes de Dados Referenciadas
+## Fontes de Dados Referenciadas
 
-* **DATASUS (TabNet/SIHSUS):** Sistema de Informações Hospitalares do SUS.
-* **IntegraSUS:** Portal de transparência da Secretaria da Saúde do Estado do Ceará (SESA).
+* **DATASUS (TabNet/SIHSUS):** Sistema de Informacoes Hospitalares do SUS. Microdados de AIH Reduzida acessados via [PySUS](https://github.com/AlertaDengue/PySUS).
+* **IntegraSUS:** Portal de transparencia da Secretaria da Saude do Estado do Ceara (SESA).
+* **Tabela CID-10 (Subcategorias):** Arquivo `CID-10-SUBCATEGORIAS.CSV` extraido do repositorio [CidDataSus](https://github.com/cleytonferrari/CidDataSus) (`CIDImport/Repositorio/Resources/CID-10-SUBCATEGORIAS.CSV`). Contem 12.451 subcategorias da Classificacao Internacional de Doencas em portugues, utilizado para converter codigos CID-10 em nomes de diagnostico no dashboard. Codificacao original ISO-8859-1, separador `;`.

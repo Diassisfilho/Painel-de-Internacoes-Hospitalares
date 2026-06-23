@@ -46,16 +46,16 @@ periodos_disponiveis = sorted(df_completo['PERIODO'].unique())
 
 with st.sidebar:
     st.header("Filtros")
-    periodos_selecionados = st.multiselect(
+    periodo_inicio, periodo_fim = st.select_slider(
         "Periodo",
         options=periodos_disponiveis,
-        default=periodos_disponiveis,
+        value=(periodos_disponiveis[0], periodos_disponiveis[-1]),
     )
 
-if periodos_selecionados:
-    df = df_completo[df_completo['PERIODO'].isin(periodos_selecionados)]
-else:
-    df = df_completo
+df = df_completo[
+    (df_completo['PERIODO'] >= periodo_inicio) &
+    (df_completo['PERIODO'] <= periodo_fim)
+]
 
 st.title("Painel de Internacoes Hospitalares - Ocara/CE")
 st.caption("Fonte: DATASUS/SIH - AIH Reduzida")
