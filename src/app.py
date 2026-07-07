@@ -26,8 +26,16 @@ def carregar_dados():
         return pd.DataFrame()
 
     df = pd.read_csv(CAMINHO_DADOS)
+    
+    numeric_cols = ['ANO_CMPT', 'MES_CMPT', 'SEXO', 'IDADE', 'DIAS_PERM', 'MORTE', 'VAL_TOT']
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    df = df.dropna(subset=['ANO_CMPT', 'MES_CMPT', 'SEXO'])
+    
     df['SEXO_LABEL'] = df['SEXO'].map(MAPA_SEXO).fillna('Outro')
-    df['PERIODO'] = df['ANO_CMPT'].astype(str) + '-' + df['MES_CMPT'].astype(str).str.zfill(2)
+    df['PERIODO'] = df['ANO_CMPT'].astype(int).astype(str) + '-' + df['MES_CMPT'].astype(int).astype(str).str.zfill(2)
 
     mapa_cid = carregar_cid10()
     df['DIAGNOSTICO'] = df['DIAG_PRINC'].map(mapa_cid).fillna(df['DIAG_PRINC'])
