@@ -120,6 +120,7 @@ with col_esq2:
         title='Distribuição por Faixa Etária',
         labels={'IDADE': 'Idade', 'count': 'Quantidade'},
     )
+    fig_idade.update_traces(marker=dict(line=dict(color='black', width=1)))
     st.plotly_chart(fig_idade, use_container_width=True)
 
 with col_dir2:
@@ -128,6 +129,7 @@ with col_dir2:
         title='Distribuição de Dias de Permanência',
         labels={'DIAS_PERM': 'Dias', 'count': 'Quantidade'},
     )
+    fig_perm.update_traces(marker=dict(line=dict(color='black', width=1)))
     st.plotly_chart(fig_perm, use_container_width=True)
 
 if df['PERIODO'].nunique() > 1:
