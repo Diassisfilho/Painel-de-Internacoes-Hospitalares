@@ -54,20 +54,87 @@ periodos_disponiveis = sorted(df_completo['PERIODO'].unique())
 
 with st.sidebar:
     st.header("Filtros")
+    
+    # Filtro de período
     periodo_inicio, periodo_fim = st.select_slider(
         "Período",
         options=periodos_disponiveis,
         value=(periodos_disponiveis[0], periodos_disponiveis[-1]),
     )
+    
+    st.divider()
+    
+    # Filtro de sexo
+    sexos_disponiveis = ['Todos'] + sorted(df_completo['SEXO_LABEL'].unique().tolist())
+    sexo_selecionado = st.selectbox(
+        "Sexo",
+        options=sexos_disponiveis,
+        index=0
+    )
+    
+    # Filtro de faixa etária
+    idade_min = int(df_completo['IDADE'].min())
+    idade_max = int(df_completo['IDADE'].max())
+    faixa_etaria = st.slider(
+        "Faixa Etária",
+        min_value=idade_min,
+        max_value=idade_max,
+        value=(idade_min, idade_max)
+    )
+    
+    # Filtro de diagnóstico
+    diagnosticos_disponiveis = ['Todos'] + sorted(df_completo['DIAGNOSTICO'].unique().tolist())
+    diagnostico_selecionado = st.multiselect(
+        "Diagnósticos",
+        options=diagnosticos_disponiveis,
+        default=['Todos']
+    )
 
+# Aplicar filtros
 df = df_completo[
     (df_completo['PERIODO'] >= periodo_inicio) &
     (df_completo['PERIODO'] <= periodo_fim)
 ]
 
+# Filtro de sexo
+if sexo_selecionado != 'Todos':
+    df = df[df['SEXO_LABEL'] == sexo_selecionado]
+
+# Filtro de faixa etária
+df = df[(df['IDADE'] >= faixa_etaria[0]) & (df['IDADE'] <= faixa_etaria[1])]
+
+# Filtro de diagnóstico
+if 'Todos' not in diagnostico_selecionado and len(diagnostico_selecionado) > 0:
+    df = df[df['DIAGNOSTICO'].isin(diagnostico_selecionado)]
+
+# Mostrar resumo dos filtros aplicados
+with st.sidebar:
+    st.divider()
+    total_completo = len(df_completo)
+    total_filtrado = len(df)
+    percentual = (total_filtrado / total_completo * 100) if total_completo > 0 else 0
+    
+    st.metric(
+        "Registros Filtrados",
+        f"{total_filtrado:,}",
+        f"{percentual:.1f}% do total"
+    )
+    
+    if total_filtrado < total_completo:
+        st.caption(f"Total de registros: {total_completo:,}")
+    
+    # Verificar se há dados após filtros
+    if df.empty:
+        st.warning("⚠️ Nenhum registro encontrado com os filtros aplicados")
+
 st.title("Painel de Internações Hospitalares - Ocara/CE")
 st.caption("Fonte: DATASUS/SIH - AIH Reduzida")
 st.divider()
+
+# Verificar se há dados após filtros
+if df.empty:
+    st.warning("⚠️ Nenhum registro encontrado com os filtros aplicados. Ajuste os filtros na barra lateral.")
+    st.stop()
 
 total = len(df)
 obitos = int(df['MORTE'].sum())
