@@ -3,7 +3,12 @@ import pandas as pd
 import plotly.express as px
 import os
 
-st.set_page_config(page_title="Painel de Saúde - Ocara/CE", page_icon="🏥", layout="wide")
+st.set_page_config(
+    page_title="Painel de Saúde - Ocara/CE", 
+    page_icon="🏥", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 DIR_BASE = os.path.join(os.path.dirname(__file__), '..')
 CAMINHO_DADOS = os.path.join(DIR_BASE, 'dados', 'internacoes_ocara.csv')
@@ -53,7 +58,8 @@ if df_completo.empty:
 periodos_disponiveis = sorted(df_completo['PERIODO'].unique())
 
 with st.sidebar:
-    st.header("Filtros")
+    st.header("🔍 Filtros")
+    st.caption("Use os filtros abaixo para refinar os dados exibidos no dashboard")
     
     # Filtro de período
     periodo_inicio, periodo_fim = st.select_slider(
