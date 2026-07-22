@@ -206,15 +206,90 @@ with col_dir2:
     st.plotly_chart(fig_perm, use_container_width=True)
 
 if df['PERIODO'].nunique() > 1:
-    por_mes = df.groupby('PERIODO').size().reset_index(name='Internações')
-    por_mes = por_mes.sort_values('PERIODO')
-
-    fig_serie = px.line(
-        por_mes, x='PERIODO', y='Internações',
-        title='Evolução Mensal de Internações',
+    st.divider()
+    st.subheader("📈 Análise Temporal")
+    
+    # Criar séries temporais de diferentes métricas
+    serie_temporal = df.groupby('PERIODO').agg({
+        'SEXO': 'count',     # Total de internações (contagem de registros)
+        'MORTE': 'sum',      # Total de óbitos
+        'DIAS_PERM': 'mean', # Média de dias de permanência
+        'VAL_TOT': 'sum'     # Valor total
+    }).reset_index()
+    
+    serie_temporal.columns = ['PERIODO', 'Internações', 'Óbitos', 'Dias Médios', 'Valor Total']
+    serie_temporal = serie_temporal.sort_values('PERIODO')
+    
+    # Linha 1: Internações e Óbitos
+    col_temp1, col_temp2 = st.columns(2)
+    
+    with col_temp1:
+        fig_internacoes = px.line(
+            serie_temporal, x='PERIODO', y='Internações',
+            title='Evolução Mensal de Internações',
+            markers=True,
+        )
+        fig_internacoes.update_traces(line_color='#1f77b4', line_width=3)
+        st.plotly_chart(fig_internacoes, use_container_width=True)
+    
+    with col_temp2:
+        fig_obitos = px.line(
+            serie_temporal, x='PERIODO', y='Óbitos',
+            title='Evolução Mensal de Óbitos',
+            markers=True,
+        )
+        fig_obitos.update_traces(line_color='#d62728', line_width=3)
+        st.plotly_chart(fig_obitos, use_container_width=True)
+    
+    # Linha 2: Dias médios e Valor total
+    col_temp3, col_temp4 = st.columns(2)
+    
+    with col_temp3:
+        fig_dias = px.line(
+            serie_temporal, x='PERIODO', y='Dias Médios',
+            title='Evolução da Permanência Média (dias)',
+            markers=True,
+        )
+        fig_dias.update_traces(line_color='#ff7f0e', line_width=3)
+        st.plotly_chart(fig_dias, use_container_width=True)
+    
+    with col_temp4:
+        fig_valor = px.line(
+            serie_temporal, x='PERIODO', y='Valor Total',
+            title='Evolução do Valor Total (R$)',
+            markers=True,
+        )
+        fig_valor.update_traces(line_color='#2ca02c', line_width=3)
+        fig_valor.update_yaxes(tickformat=',.0f')
+        st.plotly_chart(fig_valor, use_container_width=True)
+    
+    # Série temporal por sexo
+    st.subheader("📊 Internações por Sexo ao Longo do Tempo")
+    serie_sexo = df.groupby(['PERIODO', 'SEXO_LABEL']).size().reset_index(name='Internações')
+    serie_sexo = serie_sexo.sort_values('PERIODO')
+    
+    fig_sexo_tempo = px.line(
+        serie_sexo, x='PERIODO', y='Internações', color='SEXO_LABEL',
+        title='Comparação Temporal por Sexo',
         markers=True,
     )
-    st.plotly_chart(fig_serie, use_container_width=True)
+    fig_sexo_tempo.update_traces(line_width=3)
+    st.plotly_chart(fig_sexo_tempo, use_container_width=True)
+    
+    # Top diagnósticos ao longo do tempo
+    st.subheader("🏥 Top 5 Diagnósticos ao Longo do Tempo")
+    top_diag = df['DIAGNOSTICO'].value_counts().head(5).index.tolist()
+    df_top_diag = df[df['DIAGNOSTICO'].isin(top_diag)]
+    serie_diag = df_top_diag.groupby(['PERIODO', 'DIAGNOSTICO']).size().reset_index(name='Internações')
+    serie_diag = serie_diag.sort_values('PERIODO')
+    
+    fig_diag_tempo = px.line(
+        serie_diag, x='PERIODO', y='Internações', color='DIAGNOSTICO',
+        title='Evolução dos 5 Diagnósticos Mais Frequentes',
+        markers=True,
+    )
+    fig_diag_tempo.update_traces(line_width=2)
+    st.plotly_chart(fig_diag_tempo, use_container_width=True)
 
 with st.expander("Ver dados tabulares"):
     colunas_exibir = ['ANO_CMPT', 'MES_CMPT', 'DIAGNOSTICO', 'SEXO_LABEL', 'IDADE', 'DIAS_PERM', 'VAL_TOT', 'MORTE']
