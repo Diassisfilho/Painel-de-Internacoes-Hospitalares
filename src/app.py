@@ -133,8 +133,28 @@ with st.sidebar:
     if df.empty:
         st.warning("⚠️ Nenhum registro encontrado com os filtros aplicados")
 
-st.title("Painel de Internações Hospitalares - Ocara/CE")
+st.title("🏥 Painel de Internações Hospitalares - Ocara/CE")
 st.caption("Fonte: DATASUS/SIH - AIH Reduzida")
+
+# Seção introdutória
+st.markdown("""
+<div style="background-color: #e8f4f8; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4; margin-bottom: 20px;">
+    <h3 style="color: #1f77b4; margin-top: 0;">📊 Sobre este Dashboard</h3>
+    <p style="font-size: 16px; line-height: 1.6; margin-bottom: 10px; color: #1a1a1a;">
+        Este painel interativo apresenta <strong>dados oficiais de internações hospitalares</strong> do município de 
+        <strong>Ocara, Ceará</strong>, extraídos do sistema DATASUS (Departamento de Informática do Sistema Único de Saúde).
+    </p>
+    <p style="font-size: 16px; line-height: 1.6; margin-bottom: 10px; color: #1a1a1a;">
+        <strong>🎯 Objetivo:</strong> Fornecer uma visão clara e acessível dos indicadores de saúde pública, 
+        permitindo análise de tendências, diagnósticos mais frequentes, perfil demográfico dos pacientes e evolução temporal das internações.
+    </p>
+    <p style="font-size: 16px; line-height: 1.6; margin-bottom: 0; color: #1a1a1a;">
+        <strong>🔍 Como usar:</strong> Utilize os <strong>filtros na barra lateral</strong> (à esquerda) para refinar os dados 
+        por período, sexo, faixa etária ou diagnóstico específico. Os gráficos e indicadores serão atualizados automaticamente.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
 st.divider()
 
 # Verificar se há dados após filtros
