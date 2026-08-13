@@ -225,64 +225,83 @@ with col_dir2:
     fig_perm.update_traces(marker=dict(line=dict(color='black', width=1)))
     st.plotly_chart(fig_perm, use_container_width=True)
 
+# Seção de Análises Avançadas
+st.divider()
+st.subheader("📊 Análises Avançadas")
+
+# Criar faixas etárias
+df['FAIXA_ETARIA'] = pd.cut(df['IDADE'], 
+                              bins=[0, 1, 12, 18, 40, 60, 100], 
+                              labels=['Bebês (0-1)', 'Crianças (2-12)', 'Adolescentes (13-18)', 
+                                      'Adultos (19-40)', 'Meia-idade (41-60)', 'Idosos (60+)'])
+
+# 1. Análise por Faixa Etária Detalhada
+st.subheader("👥 Análise por Faixa Etária")
+faixa_analise = df.groupby('FAIXA_ETARIA', observed=True).agg({
+    'IDADE': 'count',
+    'VAL_TOT': 'mean'
+}).reset_index()
+faixa_analise.columns = ['Faixa Etária', 'Internações', 'Custo Médio']
+faixa_analise = faixa_analise.sort_values('Faixa Etária')
+
+col_faixa1, col_faixa2 = st.columns(2)
+
+with col_faixa1:
+    fig_faixa_qtd = px.bar(
+        faixa_analise, x='Faixa Etária', y='Internações',
+        title='Internações por Faixa Etária',
+        color='Internações',
+        color_continuous_scale='Blues'
+    )
+    st.plotly_chart(fig_faixa_qtd, use_container_width=True)
+
+with col_faixa2:
+    fig_faixa_custo = px.bar(
+        faixa_analise, x='Faixa Etária', y='Custo Médio',
+        title='Custo Médio por Faixa Etária (R$)',
+        color='Custo Médio',
+        color_continuous_scale='Oranges'
+    )
+    fig_faixa_custo.update_yaxes(tickformat=',.0f')
+    st.plotly_chart(fig_faixa_custo, use_container_width=True)
+
+# 2. Taxa de Mortalidade por Faixa Etária
+st.subheader("💔 Taxa de Mortalidade por Faixa Etária")
+morte_faixa = df.groupby('FAIXA_ETARIA', observed=True).agg({
+    'MORTE': 'sum',
+    'IDADE': 'count'
+}).reset_index()
+morte_faixa.columns = ['Faixa Etária', 'Óbitos', 'Internações']
+morte_faixa['Taxa (%)'] = (morte_faixa['Óbitos'] / morte_faixa['Internações'] * 100).round(2)
+morte_faixa = morte_faixa.sort_values('Faixa Etária')
+
+fig_mortalidade = px.bar(
+    morte_faixa, x='Faixa Etária', y='Internações',
+    title='Internações e Taxa de Mortalidade por Faixa Etária',
+    color='Taxa (%)',
+    color_continuous_scale='Reds',
+    text='Taxa (%)'
+)
+fig_mortalidade.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+st.plotly_chart(fig_mortalidade, use_container_width=True)
+
+# 3. Composição do Valor das Internações
+st.subheader("💰 Composição do Valor das Internações")
+componentes_valor = pd.DataFrame({
+    'Componente': ['Serviços Hospitalares', 'Serviços Profissionais', 'UTI'],
+    'Valor': [df['VAL_SH'].sum(), df['VAL_SP'].sum(), df['VAL_UTI'].sum()]
+})
+componentes_valor = componentes_valor[componentes_valor['Valor'] > 0]
+
+fig_composicao = px.pie(
+    componentes_valor, names='Componente', values='Valor',
+    title='Distribuição dos Custos por Componente',
+    hole=0.4
+)
+fig_composicao.update_traces(textposition='inside', textinfo='percent+label')
+st.plotly_chart(fig_composicao, use_container_width=True)
+
 if df['PERIODO'].nunique() > 1:
-    st.divider()
-    st.subheader("📈 Análise Temporal")
-    
-    # Criar séries temporais de diferentes métricas
-    serie_temporal = df.groupby('PERIODO').agg({
-        'SEXO': 'count',     # Total de internações (contagem de registros)
-        'MORTE': 'sum',      # Total de óbitos
-        'DIAS_PERM': 'mean', # Média de dias de permanência
-        'VAL_TOT': 'sum'     # Valor total
-    }).reset_index()
-    
-    serie_temporal.columns = ['PERIODO', 'Internações', 'Óbitos', 'Dias Médios', 'Valor Total']
-    serie_temporal = serie_temporal.sort_values('PERIODO')
-    
-    # Linha 1: Internações e Óbitos
-    col_temp1, col_temp2 = st.columns(2)
-    
-    with col_temp1:
-        fig_internacoes = px.line(
-            serie_temporal, x='PERIODO', y='Internações',
-            title='Evolução Mensal de Internações',
-            markers=True,
-        )
-        fig_internacoes.update_traces(line_color='#1f77b4', line_width=3)
-        st.plotly_chart(fig_internacoes, use_container_width=True)
-    
-    with col_temp2:
-        fig_obitos = px.line(
-            serie_temporal, x='PERIODO', y='Óbitos',
-            title='Evolução Mensal de Óbitos',
-            markers=True,
-        )
-        fig_obitos.update_traces(line_color='#d62728', line_width=3)
-        st.plotly_chart(fig_obitos, use_container_width=True)
-    
-    # Linha 2: Dias médios e Valor total
-    col_temp3, col_temp4 = st.columns(2)
-    
-    with col_temp3:
-        fig_dias = px.line(
-            serie_temporal, x='PERIODO', y='Dias Médios',
-            title='Evolução da Permanência Média (dias)',
-            markers=True,
-        )
-        fig_dias.update_traces(line_color='#ff7f0e', line_width=3)
-        st.plotly_chart(fig_dias, use_container_width=True)
-    
-    with col_temp4:
-        fig_valor = px.line(
-            serie_temporal, x='PERIODO', y='Valor Total',
-            title='Evolução do Valor Total (R$)',
-            markers=True,
-        )
-        fig_valor.update_traces(line_color='#2ca02c', line_width=3)
-        fig_valor.update_yaxes(tickformat=',.0f')
-        st.plotly_chart(fig_valor, use_container_width=True)
-    
     # Série temporal por sexo
     st.subheader("📊 Internações por Sexo ao Longo do Tempo")
     serie_sexo = df.groupby(['PERIODO', 'SEXO_LABEL']).size().reset_index(name='Internações')
