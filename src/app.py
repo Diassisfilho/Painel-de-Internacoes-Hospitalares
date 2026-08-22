@@ -253,6 +253,7 @@ with col_faixa1:
         color='Internações',
         color_continuous_scale='Blues'
     )
+    fig_faixa_qtd.update_traces(marker=dict(line=dict(color='#000000', width=1.5)))
     st.plotly_chart(fig_faixa_qtd, use_container_width=True)
 
 with col_faixa2:
@@ -262,6 +263,7 @@ with col_faixa2:
         color='Custo Médio',
         color_continuous_scale='Oranges'
     )
+    fig_faixa_custo.update_traces(marker=dict(line=dict(color='#000000', width=1.5)))
     fig_faixa_custo.update_yaxes(tickformat=',.0f')
     st.plotly_chart(fig_faixa_custo, use_container_width=True)
 
@@ -282,7 +284,11 @@ fig_mortalidade = px.bar(
     color_continuous_scale='Reds',
     text='Taxa (%)'
 )
-fig_mortalidade.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+fig_mortalidade.update_traces(
+    texttemplate='%{text:.1f}%', 
+    textposition='outside',
+    marker=dict(line=dict(color='#000000', width=1.5))
+)
 st.plotly_chart(fig_mortalidade, use_container_width=True)
 
 # 3. Composição do Valor das Internações
