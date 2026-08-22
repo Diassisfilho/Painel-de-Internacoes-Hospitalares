@@ -275,20 +275,33 @@ morte_faixa = df.groupby('FAIXA_ETARIA', observed=True).agg({
 }).reset_index()
 morte_faixa.columns = ['Faixa Etária', 'Óbitos', 'Internações']
 morte_faixa['Taxa (%)'] = (morte_faixa['Óbitos'] / morte_faixa['Internações'] * 100).round(2)
+morte_faixa['Sobreviventes'] = morte_faixa['Internações'] - morte_faixa['Óbitos']
 morte_faixa = morte_faixa.sort_values('Faixa Etária')
 
+# Criar gráfico de barras empilhadas
 fig_mortalidade = px.bar(
-    morte_faixa, x='Faixa Etária', y='Internações',
+    morte_faixa, x='Faixa Etária', y=['Sobreviventes', 'Óbitos'],
     title='Internações e Taxa de Mortalidade por Faixa Etária',
-    color='Taxa (%)',
-    color_continuous_scale='Reds',
-    text='Taxa (%)'
+    labels={'value': 'Quantidade', 'variable': 'Status'},
+    color_discrete_map={'Sobreviventes': '#90EE90', 'Óbitos': '#FF6B6B'},
+    text_auto=False
 )
-fig_mortalidade.update_traces(
-    texttemplate='%{text:.1f}%', 
-    textposition='outside',
-    marker=dict(line=dict(color='#000000', width=1.5))
-)
+
+# Adicionar texto da porcentagem dentro das barras de óbitos
+for i, row in morte_faixa.iterrows():
+    if row['Óbitos'] > 0:
+        fig_mortalidade.add_annotation(
+            x=row['Faixa Etária'],
+            y=row['Sobreviventes'] + row['Óbitos']/2,
+            text=f"{row['Taxa (%)']}%",
+            showarrow=False,
+            font=dict(size=12, color='white', family='Arial Black'),
+            bgcolor='rgba(0,0,0,0.6)',
+            borderpad=4
+        )
+
+fig_mortalidade.update_traces(marker=dict(line=dict(color='#000000', width=1)))
+fig_mortalidade.update_layout(barmode='stack', showlegend=True)
 st.plotly_chart(fig_mortalidade, use_container_width=True)
 
 # 3. Composição do Valor das Internações
