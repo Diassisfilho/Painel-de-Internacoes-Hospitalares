@@ -3,18 +3,22 @@ import pandas as pd
 import plotly.express as px
 import os
 
-st.set_page_config(
-    page_title="Painel de Saúde - Ocara/CE", 
-    page_icon="🏥", 
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 DIR_BASE = os.path.join(os.path.dirname(__file__), '..')
 CAMINHO_DADOS = os.path.join(DIR_BASE, 'dados', 'internacoes_ocara.csv')
 CAMINHO_CID = os.path.join(DIR_BASE, 'dados', 'cid10_subcategorias.csv')
+CAMINHO_BRASAO = os.path.join(DIR_BASE, 'assets', 'brasao-ocara.png')
 
 MAPA_SEXO = {1: 'Masculino', 3: 'Feminino'}
+
+# Definir favicon como brasão se existir, senão emoji padrão
+PAGE_ICON = CAMINHO_BRASAO if os.path.exists(CAMINHO_BRASAO) else "🏥"
+
+st.set_page_config(
+    page_title="Painel de Saúde - Ocara/CE", 
+    page_icon=PAGE_ICON, 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 
 @st.cache_data
@@ -58,6 +62,11 @@ if df_completo.empty:
 periodos_disponiveis = sorted(df_completo['PERIODO'].unique())
 
 with st.sidebar:
+    # Brasão no topo da sidebar
+    if os.path.exists(CAMINHO_BRASAO):
+        st.image(CAMINHO_BRASAO, width=120)
+        st.caption("Município de Ocara - CE")
+        st.divider()
     st.header("🔍 Filtros")
     st.caption("Use os filtros abaixo para refinar os dados exibidos no dashboard")
     
@@ -133,13 +142,45 @@ with st.sidebar:
     if df.empty:
         st.warning("⚠️ Nenhum registro encontrado com os filtros aplicados")
 
-st.title("🏥 Painel de Internações Hospitalares - Ocara/CE")
-st.caption("Fonte: DATASUS/SIH - AIH Reduzida")
+col_logo, col_titulo = st.columns([1, 8], gap="small", vertical_alignment="center")
+with col_logo:
+    if os.path.exists(CAMINHO_BRASAO):
+        st.image(CAMINHO_BRASAO, width=110)
+with col_titulo:
+    st.title("Painel de Internações Hospitalares - Ocara/CE")
+    st.caption("Fonte: DATASUS/SIH - AIH Reduzida")
 
-# Seção introdutória
+# Pequeno espaçamento entre cabeçalho (brasão+título) e informações
+st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+
+# Estilo destacado para o expander "Sobre"
 st.markdown("""
-<div style="background-color: #e8f4f8; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4; margin-bottom: 20px;">
-    <h3 style="color: #1f77b4; margin-top: 0;">📊 Sobre este Dashboard</h3>
+<style>
+div[data-testid="stExpander"] details {
+    background-color: #e8f4f8;
+    border: 2px solid #1f77b4;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(31, 119, 180, 0.15);
+}
+div[data-testid="stExpander"] details summary {
+    font-weight: 700;
+    font-size: 17px;
+    color: #1f77b4 !important;
+    padding: 6px 0;
+}
+div[data-testid="stExpander"] details summary:hover {
+    color: #0d4a7a !important;
+}
+div[data-testid="stExpander"] details summary span {
+    font-weight: 700;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Seção introdutória (recolhida por padrão)
+with st.expander("📊 Sobre este Dashboard  —  clique para expandir", expanded=False):
+    st.markdown("""
+<div style="background-color: #e8f4f8; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4; margin-top: 4px; margin-bottom: 5px;">
     <p style="font-size: 16px; line-height: 1.6; margin-bottom: 10px; color: #1a1a1a;">
         Este painel interativo apresenta <strong>dados oficiais de internações hospitalares</strong> do município de 
         <strong>Ocara, Ceará</strong>, extraídos do sistema DATASUS (Departamento de Informática do Sistema Único de Saúde).
@@ -151,6 +192,16 @@ st.markdown("""
     <p style="font-size: 16px; line-height: 1.6; margin-bottom: 0; color: #1a1a1a;">
         <strong>🔍 Como usar:</strong> Utilize os <strong>filtros na barra lateral</strong> (à esquerda) para refinar os dados 
         por período, sexo, faixa etária ou diagnóstico específico. Os gráficos e indicadores serão atualizados automaticamente.
+    </p>
+    <p style="font-size: 14px; line-height: 1.6; margin-bottom: 0; color: #333333; border-top: 1px solid #b0d4e3; padding-top: 12px; margin-top: 12px; font-style: italic;">
+        <strong>Realização:</strong> Este dashboard foi desenvolvido pelo <strong>Grupo de Trabalho 13 (GT13) de Ocara</strong>, 
+        no âmbito do Programa de Educação pelo Trabalho para a Saúde <strong>(PET-Saúde) – Informação e Saúde Digital</strong>, 
+        da Universidade da Integração Internacional da Lusofonia Afro-Brasileira <strong>(UNILAB)</strong>, em parceria entre a 
+        <strong>Secretaria de Informação e Saúde Digital (SEIDIGI)</strong> e a 
+        <strong>Secretaria de Gestão do Trabalho e da Educação na Saúde (SGTES)</strong>, do Ministério da Saúde.
+    </p>
+    <p style="font-size: 14px; line-height: 1.6; margin: 12px 0 0 0; color: #333333;">
+        <strong>📷 Acompanhe:</strong> <a href="https://www.instagram.com/petsaudedigital.unilab" target="_blank" style="color: #1f77b4; text-decoration: none; font-weight: 600;">@petsaudedigital.unilab</a> no Instagram
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -352,3 +403,22 @@ if df['PERIODO'].nunique() > 1:
 with st.expander("Ver dados tabulares"):
     colunas_exibir = ['ANO_CMPT', 'MES_CMPT', 'DIAGNOSTICO', 'SEXO_LABEL', 'IDADE', 'DIAS_PERM', 'VAL_TOT', 'MORTE']
     st.dataframe(df[colunas_exibir], use_container_width=True)
+
+# Footer com realização e licença
+st.divider()
+st.markdown("""
+<div style="text-align: center; padding: 16px 20px; background-color: #e8f4f8; border-radius: 8px; color: #1a1a1a; font-size: 13px; line-height: 1.6; margin-top: 10px;">
+    <p style="margin-bottom: 8px; color: #1a1a1a; font-style: italic;">
+        <strong>Realização:</strong> Desenvolvido pelo <strong>Grupo de Trabalho 13 (GT13) de Ocara</strong> no âmbito do 
+        Programa de Educação pelo Trabalho para a Saúde <strong>(PET-Saúde) – Informação e Saúde Digital</strong> da 
+        <strong>Universidade da Integração Internacional da Lusofonia Afro-Brasileira (UNILAB)</strong>, em parceria entre a 
+        <strong>Secretaria de Informação e Saúde Digital (SEIDIGI)</strong> e a 
+        <strong>Secretaria de Gestão do Trabalho e da Educação na Saúde (SGTES)</strong> do Ministério da Saúde.
+    </p>
+    <p style="margin-bottom: 0; color: #1a1a1a;">
+        © 2026 GT13 de Ocara — PET-Saúde Digital / UNILAB &nbsp;|&nbsp; Licenciado sob a 
+        <a href="https://opensource.org/licenses/MIT" target="_blank" style="color: #1f77b4; text-decoration: none;">Licença MIT</a> 
+        &nbsp;|&nbsp; <a href="https://github.com/petsaudedigital-unilab/dashboard-saude-ocara-ce" target="_blank" style="color: #1f77b4; text-decoration: none;">Código no GitHub</a>
+    </p>
+</div>
+""", unsafe_allow_html=True)
