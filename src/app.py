@@ -36,6 +36,20 @@ def carregar_cid10():
 
 
 @st.cache_data
+def carregar_log_atualizacao():
+    """Carrega log da última atualização para exibição no dashboard (verificável)"""
+    import json
+    caminho_log = os.path.join(DIR_BASE, 'dados', 'ultima_atualizacao.json')
+    if not os.path.exists(caminho_log):
+        return None
+    try:
+        with open(caminho_log, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+@st.cache_data
 def carregar_dados():
     if not os.path.exists(CAMINHO_DADOS):
         return pd.DataFrame()
@@ -221,6 +235,36 @@ total = len(df)
 obitos = int(df['MORTE'].sum())
 dias_medio = round(df['DIAS_PERM'].mean(), 1) if not df.empty else 0
 valor_total = df['VAL_TOT'].sum()
+
+# Período em destaque acima dos indicadores
+st.markdown(
+    f"<div style='background-color:#e8f4f8; border-left:4px solid #1f77b4; border-radius:6px; padding:10px 16px; margin-bottom:10px; color:#1a1a1a; font-size:14px; line-height:1.5;'>"
+    f"<b>Período em exibição:</b> {periodo_inicio} a {periodo_fim} &nbsp;|&nbsp; "
+    f"<b>{total:,}</b> internações exibidas de <b>{len(df_completo):,}</b> no total"
+    f"</div>",
+    unsafe_allow_html=True
+)
+
+# Log verificável da última atualização (2x por mês via Actions + PySUS)
+log_atualizacao = carregar_log_atualizacao()
+if log_atualizacao:
+    status = log_atualizacao.get('status', 'desconhecido')
+    data_br = log_atualizacao.get('data_ultima_atualizacao_brasil', log_atualizacao.get('data_ultima_atualizacao_utc', ''))
+    periodo_rec = log_atualizacao.get('periodo_mais_recente', '—')
+    total_log = log_atualizacao.get('total_registros', len(df_completo))
+    cor_status = '#0e7a0d' if status == 'sucesso' else '#b45309' if status == 'sem_dados' else '#dc2626'
+    st.markdown(
+        f"<div style='background-color:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid {cor_status}; border-radius:6px; padding:8px 14px; margin-bottom:14px; color:#1a1a1a; font-size:12px; line-height:1.4;'>"
+        f"<b>Última atualização:</b> {data_br} &nbsp;|&nbsp; "
+        f"<span style='color:{cor_status}; font-weight:600; text-transform:uppercase;'>{status}</span> &nbsp;|&nbsp; "
+        f"Período recente: <b>{periodo_rec}</b> &nbsp;|&nbsp; "
+        f"Total na base: <b>{total_log:,}</b> &nbsp;|&nbsp; "
+        f"Frequência: <b>2x por mês</b> (dias 1 e 15, 03:00 UTC via PySUS)"
+        f"</div>",
+        unsafe_allow_html=True
+    )
+else:
+    st.caption("Última atualização: log não encontrado (dados/ultima_atualizacao.json). Execute o extrator ou aguarde o próximo ciclo do Actions (dias 1 e 15).")
 
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total de Internações", total)
@@ -467,6 +511,15 @@ if df['PERIODO'].nunique() > 1:
 with st.expander("Ver dados tabulares"):
     colunas_exibir = ['ANO_CMPT', 'MES_CMPT', 'DIAGNOSTICO', 'SEXO_LABEL', 'IDADE', 'DIAS_PERM', 'VAL_TOT', 'MORTE']
     st.dataframe(df[colunas_exibir], use_container_width=True)
+
+with st.expander("Ver logs de atualização (verificável)"):
+    log_detalhado = carregar_log_atualizacao()
+    if log_detalhado:
+        st.json(log_detalhado)
+        st.caption("Log gerado automaticamente 2x por mês (dias 1 e 15 às 03:00 UTC) via GitHub Actions + PySUS. Arquivo: dados/ultima_atualizacao.json")
+        st.caption(f"Período mais recente: {log_detalhado.get('periodo_mais_recente','—')} | Total: {log_detalhado.get('total_registros','—')} registros | Frequência: {log_detalhado.get('frequencia','2x por mês')}")
+    else:
+        st.info("Nenhum log encontrado em dados/ultima_atualizacao.json. Será gerado no próximo ciclo do Actions (dias 1 e 15).")
 
 # Footer com realização e licença
 st.divider()
