@@ -10,8 +10,14 @@ CAMINHO_BRASAO = os.path.join(DIR_BASE, 'assets', 'brasao-ocara.png')
 
 MAPA_SEXO = {1: 'Masculino', 3: 'Feminino'}
 
+# Paleta Okabe-Ito segura para daltônicos (deuteranopia/protanopia/tritanopia)
+PALETA_OKABE_ITO = ["#0072B2", "#E69F00", "#009E73", "#D55E00", "#CC79A7", "#F0E442", "#56B4E9", "#000000"]
+PALETA_SEXO_DALTONICO = {"Masculino": "#0072B2", "Feminino": "#D55E00", "Outro": "#009E73"}
+PALETA_MORTALIDADE = {"Sobreviventes": "#0072B2", "Óbitos": "#D55E00"}
+CORES_CONTINUAS_DALTONICO = "Viridis"
+
 # Definir favicon como brasão se existir, senão emoji padrão
-PAGE_ICON = CAMINHO_BRASAO if os.path.exists(CAMINHO_BRASAO) else "🏥"
+PAGE_ICON = CAMINHO_BRASAO if os.path.exists(CAMINHO_BRASAO) else ""
 
 st.set_page_config(
     page_title="Painel de Saúde - Ocara/CE", 
@@ -62,12 +68,7 @@ if df_completo.empty:
 periodos_disponiveis = sorted(df_completo['PERIODO'].unique())
 
 with st.sidebar:
-    # Brasão no topo da sidebar
-    if os.path.exists(CAMINHO_BRASAO):
-        st.image(CAMINHO_BRASAO, width=120)
-        st.caption("Município de Ocara - CE")
-        st.divider()
-    st.header("🔍 Filtros")
+    st.header("Filtros")
     st.caption("Use os filtros abaixo para refinar os dados exibidos no dashboard")
     
     # Filtro de período
@@ -140,15 +141,18 @@ with st.sidebar:
     
     # Verificar se há dados após filtros
     if df.empty:
-        st.warning("⚠️ Nenhum registro encontrado com os filtros aplicados")
+        st.warning("Nenhum registro encontrado com os filtros aplicados")
 
-col_logo, col_titulo = st.columns([1, 8], gap="small", vertical_alignment="center")
+col_logo, col_titulo, col_toggle = st.columns([1, 5, 2], gap="small", vertical_alignment="center")
 with col_logo:
     if os.path.exists(CAMINHO_BRASAO):
-        st.image(CAMINHO_BRASAO, width=110)
+        st.image(CAMINHO_BRASAO, width=90)
 with col_titulo:
     st.title("Painel de Internações Hospitalares - Ocara/CE")
     st.caption("Fonte: DATASUS/SIH - AIH Reduzida")
+with col_toggle:
+    modo_daltonico = st.toggle("Modo daltônico", value=True, help="Ativa paleta Okabe-Ito + Viridis e traços/padrões distintos para facilitar leitura por pessoas com daltonismo (deuteranopia, protanopia, tritanopia).")
+    st.caption("Paleta segura" if modo_daltonico else "Paleta padrão")
 
 # Pequeno espaçamento entre cabeçalho (brasão+título) e informações
 st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
@@ -178,7 +182,7 @@ div[data-testid="stExpander"] details summary span {
 """, unsafe_allow_html=True)
 
 # Seção introdutória (recolhida por padrão)
-with st.expander("📊 Sobre este Dashboard  —  clique para expandir", expanded=False):
+with st.expander("Sobre este Dashboard — clique para expandir", expanded=False):
     st.markdown("""
 <div style="background-color: #e8f4f8; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4; margin-top: 4px; margin-bottom: 5px;">
     <p style="font-size: 16px; line-height: 1.6; margin-bottom: 10px; color: #1a1a1a;">
@@ -186,11 +190,11 @@ with st.expander("📊 Sobre este Dashboard  —  clique para expandir", expande
         <strong>Ocara, Ceará</strong>, extraídos do sistema DATASUS (Departamento de Informática do Sistema Único de Saúde).
     </p>
     <p style="font-size: 16px; line-height: 1.6; margin-bottom: 10px; color: #1a1a1a;">
-        <strong>🎯 Objetivo:</strong> Fornecer uma visão clara e acessível dos indicadores de saúde pública, 
+        <strong>Objetivo:</strong> Fornecer uma visão clara e acessível dos indicadores de saúde pública, 
         permitindo análise de tendências, diagnósticos mais frequentes, perfil demográfico dos pacientes e evolução temporal das internações.
     </p>
     <p style="font-size: 16px; line-height: 1.6; margin-bottom: 0; color: #1a1a1a;">
-        <strong>🔍 Como usar:</strong> Utilize os <strong>filtros na barra lateral</strong> (à esquerda) para refinar os dados 
+        <strong>Como usar:</strong> Utilize os <strong>filtros na barra lateral</strong> (à esquerda) para refinar os dados 
         por período, sexo, faixa etária ou diagnóstico específico. Os gráficos e indicadores serão atualizados automaticamente.
     </p>
     <p style="font-size: 14px; line-height: 1.6; margin-bottom: 0; color: #333333; border-top: 1px solid #b0d4e3; padding-top: 12px; margin-top: 12px; font-style: italic;">
@@ -201,7 +205,7 @@ with st.expander("📊 Sobre este Dashboard  —  clique para expandir", expande
         <strong>Secretaria de Gestão do Trabalho e da Educação na Saúde (SGTES)</strong>, do Ministério da Saúde.
     </p>
     <p style="font-size: 14px; line-height: 1.6; margin: 12px 0 0 0; color: #333333;">
-        <strong>📷 Acompanhe:</strong> <a href="https://www.instagram.com/petsaudedigital.unilab" target="_blank" style="color: #1f77b4; text-decoration: none; font-weight: 600;">@petsaudedigital.unilab</a> no Instagram
+        <strong>Acompanhe:</strong> <a href="https://www.instagram.com/petsaudedigital.unilab" target="_blank" style="color: #1f77b4; text-decoration: none; font-weight: 600;">@petsaudedigital.unilab</a> no Instagram
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -210,7 +214,7 @@ st.divider()
 
 # Verificar se há dados após filtros
 if df.empty:
-    st.warning("⚠️ Nenhum registro encontrado com os filtros aplicados. Ajuste os filtros na barra lateral.")
+    st.warning("Nenhum registro encontrado com os filtros aplicados. Ajuste os filtros na barra lateral.")
     st.stop()
 
 total = len(df)
@@ -240,10 +244,12 @@ with col_esq:
     fig_diag = px.bar(
         contagem_diag, x='Quantidade', y='Diagnóstico',
         title='Diagnósticos Mais Frequentes',
-        color_discrete_sequence=['#ff7f0e'],
+        color_discrete_sequence=[PALETA_OKABE_ITO[1]] if modo_daltonico else ['#ff7f0e'],
         orientation='h',
     )
     fig_diag.update_layout(yaxis={'categoryorder': 'total ascending'})
+    fig_diag.update_traces(marker=dict(line=dict(color='black', width=1)), textposition='outside')
+    fig_diag.update_traces(texttemplate='%{x}', textposition='outside')
     st.plotly_chart(fig_diag, use_container_width=True)
 
 with col_dir:
@@ -253,32 +259,43 @@ with col_dir:
     fig_sexo = px.pie(
         contagem_sexo, names='Sexo', values='Quantidade',
         title='Internações por Sexo',
+        color='Sexo',
+        color_discrete_map=PALETA_SEXO_DALTONICO if modo_daltonico else None,
     )
+    fig_sexo.update_traces(textinfo='percent+label', textposition='inside', marker=dict(line=dict(color='black', width=1.5)))
     st.plotly_chart(fig_sexo, use_container_width=True)
 
 col_esq2, col_dir2 = st.columns(2)
 
 with col_esq2:
+    cor_hist = PALETA_OKABE_ITO[0] if modo_daltonico else None
     fig_idade = px.histogram(
         df, x='IDADE', nbins=20,
         title='Distribuição por Faixa Etária',
         labels={'IDADE': 'Idade', 'count': 'Quantidade'},
+        color_discrete_sequence=[cor_hist] if cor_hist else None,
     )
-    fig_idade.update_traces(marker=dict(line=dict(color='black', width=1)))
+    fig_idade.update_traces(marker=dict(line=dict(color='black', width=1)), opacity=0.9)
+    if modo_daltonico:
+        fig_idade.update_traces(marker=dict(pattern=dict(shape="/", fgcolor="rgba(0,0,0,0.15)")))
     st.plotly_chart(fig_idade, use_container_width=True)
 
 with col_dir2:
+    cor_hist2 = PALETA_OKABE_ITO[1] if modo_daltonico else None
     fig_perm = px.histogram(
         df, x='DIAS_PERM', nbins=20,
         title='Distribuição de Dias de Permanência',
         labels={'DIAS_PERM': 'Dias', 'count': 'Quantidade'},
+        color_discrete_sequence=[cor_hist2] if cor_hist2 else None,
     )
-    fig_perm.update_traces(marker=dict(line=dict(color='black', width=1)))
+    fig_perm.update_traces(marker=dict(line=dict(color='black', width=1)), opacity=0.9)
+    if modo_daltonico:
+        fig_perm.update_traces(marker=dict(pattern=dict(shape="\\", fgcolor="rgba(0,0,0,0.15)")))
     st.plotly_chart(fig_perm, use_container_width=True)
 
 # Seção de Análises Avançadas
 st.divider()
-st.subheader("📊 Análises Avançadas")
+st.subheader("Análises Avançadas")
 
 # Criar faixas etárias
 df['FAIXA_ETARIA'] = pd.cut(df['IDADE'], 
@@ -287,7 +304,7 @@ df['FAIXA_ETARIA'] = pd.cut(df['IDADE'],
                                       'Adultos (19-40)', 'Meia-idade (41-60)', 'Idosos (60+)'])
 
 # 1. Análise por Faixa Etária Detalhada
-st.subheader("👥 Análise por Faixa Etária")
+st.subheader("Análise por Faixa Etária")
 faixa_analise = df.groupby('FAIXA_ETARIA', observed=True).agg({
     'IDADE': 'count',
     'VAL_TOT': 'mean'
@@ -298,28 +315,46 @@ faixa_analise = faixa_analise.sort_values('Faixa Etária')
 col_faixa1, col_faixa2 = st.columns(2)
 
 with col_faixa1:
-    fig_faixa_qtd = px.bar(
-        faixa_analise, x='Faixa Etária', y='Internações',
-        title='Internações por Faixa Etária',
-        color='Internações',
-        color_continuous_scale='Blues'
-    )
-    fig_faixa_qtd.update_traces(marker=dict(line=dict(color='#000000', width=1.5)))
+    if modo_daltonico:
+        fig_faixa_qtd = px.bar(
+            faixa_analise, x='Faixa Etária', y='Internações',
+            title='Internações por Faixa Etária',
+            color='Internações',
+            color_continuous_scale=CORES_CONTINUAS_DALTONICO,
+        )
+        fig_faixa_qtd.update_traces(marker=dict(line=dict(color='#000000', width=1.5), pattern=dict(shape="/", fgcolor="rgba(0,0,0,0.12)")))
+    else:
+        fig_faixa_qtd = px.bar(
+            faixa_analise, x='Faixa Etária', y='Internações',
+            title='Internações por Faixa Etária',
+            color='Internações',
+            color_continuous_scale='Blues'
+        )
+        fig_faixa_qtd.update_traces(marker=dict(line=dict(color='#000000', width=1.5)))
     st.plotly_chart(fig_faixa_qtd, use_container_width=True)
 
 with col_faixa2:
-    fig_faixa_custo = px.bar(
-        faixa_analise, x='Faixa Etária', y='Custo Médio',
-        title='Custo Médio por Faixa Etária (R$)',
-        color='Custo Médio',
-        color_continuous_scale='Oranges'
-    )
-    fig_faixa_custo.update_traces(marker=dict(line=dict(color='#000000', width=1.5)))
+    if modo_daltonico:
+        fig_faixa_custo = px.bar(
+            faixa_analise, x='Faixa Etária', y='Custo Médio',
+            title='Custo Médio por Faixa Etária (R$)',
+            color='Custo Médio',
+            color_continuous_scale=CORES_CONTINUAS_DALTONICO,
+        )
+        fig_faixa_custo.update_traces(marker=dict(line=dict(color='#000000', width=1.5), pattern=dict(shape="\\", fgcolor="rgba(0,0,0,0.12)")))
+    else:
+        fig_faixa_custo = px.bar(
+            faixa_analise, x='Faixa Etária', y='Custo Médio',
+            title='Custo Médio por Faixa Etária (R$)',
+            color='Custo Médio',
+            color_continuous_scale='Oranges'
+        )
+        fig_faixa_custo.update_traces(marker=dict(line=dict(color='#000000', width=1.5)))
     fig_faixa_custo.update_yaxes(tickformat=',.0f')
     st.plotly_chart(fig_faixa_custo, use_container_width=True)
 
 # 2. Taxa de Mortalidade por Faixa Etária
-st.subheader("💔 Taxa de Mortalidade por Faixa Etária")
+st.subheader("Taxa de Mortalidade por Faixa Etária")
 morte_faixa = df.groupby('FAIXA_ETARIA', observed=True).agg({
     'MORTE': 'sum',
     'IDADE': 'count'
@@ -329,13 +364,14 @@ morte_faixa['Taxa (%)'] = (morte_faixa['Óbitos'] / morte_faixa['Internações']
 morte_faixa['Sobreviventes'] = morte_faixa['Internações'] - morte_faixa['Óbitos']
 morte_faixa = morte_faixa.sort_values('Faixa Etária')
 
-# Criar gráfico de barras empilhadas
+# Criar gráfico de barras empilhadas - paleta daltônica: azul vs vermillion (não verde/vermelho)
+mapa_mortalidade = PALETA_MORTALIDADE if modo_daltonico else {'Sobreviventes': '#90EE90', 'Óbitos': '#FF6B6B'}
 fig_mortalidade = px.bar(
     morte_faixa, x='Faixa Etária', y=['Sobreviventes', 'Óbitos'],
     title='Internações e Taxa de Mortalidade por Faixa Etária',
     labels={'value': 'Quantidade', 'variable': 'Status'},
-    color_discrete_map={'Sobreviventes': '#90EE90', 'Óbitos': '#FF6B6B'},
-    text_auto=False
+    color_discrete_map=mapa_mortalidade,
+    text_auto=False,
 )
 
 # Adicionar texto da porcentagem dentro das barras de óbitos
@@ -351,12 +387,25 @@ for i, row in morte_faixa.iterrows():
             borderpad=4
         )
 
-fig_mortalidade.update_traces(marker=dict(line=dict(color='#000000', width=1)))
-fig_mortalidade.update_layout(barmode='stack', showlegend=True)
+if modo_daltonico:
+    try:
+        fig_mortalidade.data[0].marker.pattern.shape = ""
+        fig_mortalidade.data[1].marker.pattern.shape = "/"
+        fig_mortalidade.data[1].marker.pattern.fgcolor = "rgba(0,0,0,0.35)"
+        fig_mortalidade.data[1].marker.pattern.bgcolor = "rgba(0,0,0,0)"
+    except Exception:
+        pass
+    fig_mortalidade.update_traces(marker=dict(line=dict(color='#000000', width=1)), selector=dict(name="Sobreviventes"))
+    fig_mortalidade.update_traces(marker=dict(line=dict(color='#000000', width=1), pattern=dict(shape="/", fgcolor="rgba(0,0,0,0.35)")), selector=dict(name="Óbitos"))
+else:
+    fig_mortalidade.update_traces(marker=dict(line=dict(color='#000000', width=1)))
+fig_mortalidade.update_layout(barmode='stack', showlegend=True, legend=dict(title="Status", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
 st.plotly_chart(fig_mortalidade, use_container_width=True)
+if modo_daltonico:
+    st.caption("Cores Okabe-Ito: Azul (Sobreviventes) + Vermillion (Óbitos) com padrão hachurado e rótulo % dentro da barra.")
 
 # 3. Composição do Valor das Internações
-st.subheader("💰 Composição do Valor das Internações")
+st.subheader("Composição do Valor das Internações")
 componentes_valor = pd.DataFrame({
     'Componente': ['Serviços Hospitalares', 'Serviços Profissionais', 'UTI'],
     'Valor': [df['VAL_SH'].sum(), df['VAL_SP'].sum(), df['VAL_UTI'].sum()]
@@ -366,27 +415,36 @@ componentes_valor = componentes_valor[componentes_valor['Valor'] > 0]
 fig_composicao = px.pie(
     componentes_valor, names='Componente', values='Valor',
     title='Distribuição dos Custos por Componente',
-    hole=0.4
+    hole=0.4,
+    color='Componente',
+    color_discrete_sequence=PALETA_OKABE_ITO if modo_daltonico else None,
 )
-fig_composicao.update_traces(textposition='inside', textinfo='percent+label')
+fig_composicao.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='black', width=1.5)))
 st.plotly_chart(fig_composicao, use_container_width=True)
+if modo_daltonico:
+    st.caption("Paleta Okabe-Ito + contorno preto e rótulos % + nome — não depende só de cor.")
 
 if df['PERIODO'].nunique() > 1:
     # Série temporal por sexo
-    st.subheader("📊 Internações por Sexo ao Longo do Tempo")
+    st.subheader("Internações por Sexo ao Longo do Tempo")
     serie_sexo = df.groupby(['PERIODO', 'SEXO_LABEL']).size().reset_index(name='Internações')
     serie_sexo = serie_sexo.sort_values('PERIODO')
     
+    paleta_sexo_line = PALETA_SEXO_DALTONICO if modo_daltonico else None
     fig_sexo_tempo = px.line(
         serie_sexo, x='PERIODO', y='Internações', color='SEXO_LABEL',
         title='Comparação Temporal por Sexo',
         markers=True,
+        color_discrete_map=paleta_sexo_line,
+        symbol='SEXO_LABEL' if modo_daltonico else None,
+        line_dash='SEXO_LABEL' if modo_daltonico else None,
     )
-    fig_sexo_tempo.update_traces(line_width=3)
+    fig_sexo_tempo.update_traces(line_width=3, marker=dict(size=10, line=dict(width=1, color='black')))
+    fig_sexo_tempo.update_layout(legend=dict(title="Sexo", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig_sexo_tempo, use_container_width=True)
     
     # Top diagnósticos ao longo do tempo
-    st.subheader("🏥 Top 5 Diagnósticos ao Longo do Tempo")
+    st.subheader("Top 5 Diagnósticos ao Longo do Tempo")
     top_diag = df['DIAGNOSTICO'].value_counts().head(5).index.tolist()
     df_top_diag = df[df['DIAGNOSTICO'].isin(top_diag)]
     serie_diag = df_top_diag.groupby(['PERIODO', 'DIAGNOSTICO']).size().reset_index(name='Internações')
@@ -396,9 +454,15 @@ if df['PERIODO'].nunique() > 1:
         serie_diag, x='PERIODO', y='Internações', color='DIAGNOSTICO',
         title='Evolução dos 5 Diagnósticos Mais Frequentes',
         markers=True,
+        color_discrete_sequence=PALETA_OKABE_ITO if modo_daltonico else None,
+        symbol='DIAGNOSTICO' if modo_daltonico else None,
+        line_dash='DIAGNOSTICO' if modo_daltonico else None,
     )
-    fig_diag_tempo.update_traces(line_width=2)
+    fig_diag_tempo.update_traces(line_width=2.5, marker=dict(size=9, line=dict(width=1, color='black')))
+    fig_diag_tempo.update_layout(legend=dict(title="Diagnóstico"))
     st.plotly_chart(fig_diag_tempo, use_container_width=True)
+    if modo_daltonico:
+        st.caption("Séries com cores Okabe-Ito + traços e símbolos distintos + marcadores com contorno — não depende só de cor.")
 
 with st.expander("Ver dados tabulares"):
     colunas_exibir = ['ANO_CMPT', 'MES_CMPT', 'DIAGNOSTICO', 'SEXO_LABEL', 'IDADE', 'DIAS_PERM', 'VAL_TOT', 'MORTE']
