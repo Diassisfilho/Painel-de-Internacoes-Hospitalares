@@ -1,0 +1,34 @@
+name: Keep Streamlit Awake (anti-soneca)
+
+on:
+  schedule:
+    # A cada 3 horas para evitar sleep do Streamlit Community Cloud (gratuito)
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit app
+        run: |
+          URL="https://painel-de-internacoes-hospitalares-3zx9db7o4hn2fhzhn2hwpz.streamlit.app/"
+          # Permite sobrescrever via variável/secreto se o deploy mudar
+          if [ -n "${{ vars.STREAMLIT_URL }}" ]; then
+            URL="${{ vars.STREAMLIT_URL }}"
+          fi
+          if [ -n "${{ secrets.STREAMLIT_URL }}" ]; then
+            URL="${{ secrets.STREAMLIT_URL }}"
+          fi
+          echo "Pingando $URL ..."
+          # 3 tentativas com timeout curto (segue redirect Streamlit)
+          for i in 1 2 3; do
+            if curl -fsSL --max-time 30 -o /dev/null -w "HTTP %{http_code}\n" "$URL"; then
+              echo "Ping OK (tentativa $i)"
+              exit 0
+            fi
+            echo "Tentativa $i falhou, aguardando 10s..."
+            sleep 10
+          done
+          echo "Todas as tentativas falharam, mas não falha o workflow"
+          exit 0
